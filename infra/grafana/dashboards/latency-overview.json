@@ -1,0 +1,94 @@
+{
+  "title": "Latency Budget Tracker — Overview",
+  "uid": "latency-overview",
+  "schemaVersion": 38,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Rate",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "rate(latency_transactions_total_total[1m])",
+        "legendFormat": "req/s"
+      }],
+      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 2,
+      "title": "Budget Violations / min",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "sum(rate(latency_budget_violations_total[1m]))",
+        "legendFormat": "violations/min"
+      }],
+      "options": {
+        "colorMode": "background",
+        "thresholds": { "steps": [
+          { "value": 0, "color": "green" },
+          { "value": 1, "color": "yellow" },
+          { "value": 5, "color": "red" }
+        ]}
+      }
+    },
+    {
+      "id": 3,
+      "title": "Active Alerts",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "targets": [{
+        "expr": "sum(latency_budget_violations_total)",
+        "legendFormat": "total violations"
+      }]
+    },
+    {
+      "id": 4,
+      "title": "P95 Latency per Stage (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, rate(latency_stage_duration_seconds_bucket{stage='AUTHENTICATION'}[5m])) * 1000", "legendFormat": "Auth P95" },
+        { "expr": "histogram_quantile(0.95, rate(latency_stage_duration_seconds_bucket{stage='VALIDATION'}[5m])) * 1000",       "legendFormat": "Validation P95" },
+        { "expr": "histogram_quantile(0.95, rate(latency_stage_duration_seconds_bucket{stage='BUSINESS_LOGIC'}[5m])) * 1000",  "legendFormat": "Business Logic P95" },
+        { "expr": "histogram_quantile(0.95, rate(latency_stage_duration_seconds_bucket{stage='CACHE_ACCESS'}[5m])) * 1000",    "legendFormat": "Cache P95" },
+        { "expr": "histogram_quantile(0.95, rate(latency_stage_duration_seconds_bucket{stage='DATABASE_QUERY'}[5m])) * 1000",  "legendFormat": "DB P95" },
+        { "expr": "histogram_quantile(0.95, rate(latency_stage_duration_seconds_bucket{stage='RESPONSE_SERIALIZATION'}[5m])) * 1000", "legendFormat": "Response P95" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "custom": { "lineWidth": 2 } }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Budget Violations by Stage",
+      "type": "barchart",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [{
+        "expr": "sum by(stage, severity) (increase(latency_budget_violations_total[1h]))",
+        "legendFormat": "{{stage}} / {{severity}}"
+      }]
+    },
+    {
+      "id": 6,
+      "title": "Budget Deviation % per Stage",
+      "type": "gauge",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "latency_budget_deviation{stage='AUTHENTICATION'}",        "legendFormat": "Auth" },
+        { "expr": "latency_budget_deviation{stage='DATABASE_QUERY'}",        "legendFormat": "DB" },
+        { "expr": "latency_budget_deviation{stage='BUSINESS_LOGIC'}",        "legendFormat": "BL" }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "thresholds": { "steps": [
+          { "value": 0,  "color": "green" },
+          { "value": 25, "color": "yellow" },
+          { "value": 75, "color": "red" }
+        ]}
+      }
+    }
+  ]
+}

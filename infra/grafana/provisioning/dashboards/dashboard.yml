@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: latency-dashboards
+    orgId: 1
+    folder: Latency Tracker
+    folderUid: latency
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

@@ -1,0 +1,44 @@
+# ── Maven ─────────────────────────────────────────────────────────────────────
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+!backend/.mvn/wrapper/maven-wrapper.properties
+
+# ── Java ──────────────────────────────────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+
+# ── Node / Frontend ───────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env.local
+frontend/.env.*.local
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/settings.json
+.vscode/*.code-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker volumes / local data ───────────────────────────────────────────────
+infra/data/
+*.env.local
+
+# ── Secrets (never commit these) ──────────────────────────────────────────────
+*.p12
+*.jks
+*.pem
+*.key
+secrets/
