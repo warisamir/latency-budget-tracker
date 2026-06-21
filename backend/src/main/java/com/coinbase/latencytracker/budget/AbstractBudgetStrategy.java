@@ -2,6 +2,8 @@ package com.coinbase.latencytracker.budget;
 
 import com.coinbase.latencytracker.entity.LatencyRecord.Severity;
 import com.coinbase.latencytracker.entity.LatencyRecord.Stage;
+import com.coinbase.latencytracker.util.LoggerUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Base implementation that applies the standard deviation → severity mapping.
@@ -13,6 +15,7 @@ import com.coinbase.latencytracker.entity.LatencyRecord.Stage;
  *   75–149   → HIGH
  *   ≥ 150    → CRITICAL
  */
+@Slf4j
 public abstract class AbstractBudgetStrategy implements BudgetStrategy {
 
     @Override
@@ -21,11 +24,15 @@ public abstract class AbstractBudgetStrategy implements BudgetStrategy {
         long  budget  = getBudgetMs();
 
         if (actualMs <= budget) {
+            LoggerUtil.debug(log, "Budget OK - stage={} actual={}ms budget={}ms", stage, actualMs, budget);
             return BudgetResult.ok(stage, actualMs, budget);
         }
 
         double deviation = ((double)(actualMs - budget) / budget) * 100.0;
         Severity severity = classifySeverity(deviation);
+
+        LoggerUtil.warn(log, "Budget exceeded - stage={} actual={}ms budget={}ms deviation={:.1f}% severity={}",
+                stage, actualMs, budget, deviation, severity);
 
         return BudgetResult.exceeded(stage, actualMs, budget, deviation, severity);
     }

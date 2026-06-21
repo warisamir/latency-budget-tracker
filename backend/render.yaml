@@ -1,0 +1,89 @@
+services:
+  - type: web
+    name: latency-budget-tracker
+    runtime: java
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -Dspring.profiles.active=prod -jar target/*.jar
+    envVars:
+      - key: JAVA_VERSION
+        value: "17"
+      - key: JAVA_OPTS
+        value: "-Xmx512m -Xms256m"
+      - key: SERVER_PORT
+        value: "8080"
+
+      # Database Configuration (PostgreSQL)
+      - key: DB_URL
+        scope: env
+        value: ${DATABASE_URL}
+      - key: DB_USER
+        scope: env
+        value: ${DATABASE_USER}
+      - key: DB_PASSWORD
+        scope: env
+        value: ${DATABASE_PASSWORD}
+      - key: DB_POOL_SIZE
+        value: "15"
+      - key: DB_DDL_AUTO
+        value: "validate"
+
+      # Redis Configuration
+      - key: REDIS_HOST
+        scope: env
+        value: ${REDIS_HOST}
+      - key: REDIS_PORT
+        scope: env
+        value: ${REDIS_PORT}
+      - key: REDIS_PASSWORD
+        scope: env
+        value: ${REDIS_PASSWORD}
+      - key: REDIS_SSL
+        value: "true"
+
+      # Security Configuration
+      - key: SECURITY_USER
+        scope: env
+        value: "admin"
+      - key: SECURITY_PASSWORD
+        scope: env
+        value: ${SECURITY_PASSWORD}
+
+      # Observability Configuration
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: TRACING_SAMPLE_RATE
+        value: "0.1"
+      - key: OTEL_ENDPOINT
+        value: "http://localhost:4317"
+
+    healthCheckPath: /actuator/health/ready
+    healthCheckInterval: 30
+    preDeployCommand: mvn test
+
+databases:
+  - name: latencydb
+    databaseName: latencydb
+    user: postgres
+    ipAllowList: []
+
+envVarGroups:
+  - name: Database
+    envVars:
+      - key: DB_URL
+        description: "PostgreSQL connection URL"
+      - key: DB_USER
+        description: "Database username"
+      - key: DB_PASSWORD
+        description: "Database password"
+  - name: Redis
+    envVars:
+      - key: REDIS_HOST
+        description: "Redis server hostname"
+      - key: REDIS_PORT
+        description: "Redis server port"
+      - key: REDIS_PASSWORD
+        description: "Redis password (if required)"
+  - name: Security
+    envVars:
+      - key: SECURITY_PASSWORD
+        description: "Admin user password (must be strong)"

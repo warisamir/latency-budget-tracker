@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+  # ──── Database ────
+  postgres:
+    image: postgres:16-alpine
+    container_name: latency-postgres
+    environment:
+      POSTGRES_DB: latencydb
+      POSTGRES_USER: latencyuser
+      POSTGRES_PASSWORD: latencypass123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U latencyuser" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - latency-network
+
+  # ──── Cache ────
+  redis:
+    image: redis:7-alpine
+    container_name: latency-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - latency-network
+
+  # ──── Metrics Collection ────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: latency-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - latency-network
+    depends_on:
+      - app
+
+  # ──── Logs: Elasticsearch ────
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: latency-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - action.auto_create_index="+latency-*,+.watches,-*"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - latency-network
+
+  # ──── Logs: Kibana ────
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.0
+    container_name: latency-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: ""
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - latency-network
+
+  # ──── Metrics Visualization ────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: latency-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - latency-network
+
+  # ──── Application ────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: latency-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/latencydb
+      SPRING_DATASOURCE_USERNAME: latencyuser
+      SPRING_DATASOURCE_PASSWORD: latencypass123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      LOGGING_LEVEL_COM_COINBASE_LATENCYTRACKER: DEBUG
+      # Elasticsearch for logs (optional - configure in logback)
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      # JVM options
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - latency-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  latency-network:
+    driver: bridge
