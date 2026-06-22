@@ -69,14 +69,14 @@ function StageCard({ s }: { s: StageStats }) {
       </div>
       <ProgressBar actual={s.p95Ms} budget={s.budgetMs} />
       <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 12, color: "#94a3b8" }}>
-        <span>P50: <strong style={{ color: "#e2e8f0" }}>{s.p50Ms.toFixed(1)}ms</strong></span>
-        <span>P95: <strong style={{ color: "#e2e8f0" }}>{s.p95Ms.toFixed(1)}ms</strong></span>
-        <span>P99: <strong style={{ color: "#e2e8f0" }}>{s.p99Ms.toFixed(1)}ms</strong></span>
+        <span>P50: <strong style={{ color: "#e2e8f0" }}>{(s.p50Ms || 0).toFixed(1)}ms</strong></span>
+        <span>P95: <strong style={{ color: "#e2e8f0" }}>{(s.p95Ms || 0).toFixed(1)}ms</strong></span>
+        <span>P99: <strong style={{ color: "#e2e8f0" }}>{(s.p99Ms || 0).toFixed(1)}ms</strong></span>
         <span>Budget: <strong style={{ color: "#e2e8f0" }}>{s.budgetMs}ms</strong></span>
       </div>
       {s.violations > 0 && (
         <div style={{ marginTop: 6, fontSize: 11, color: SEV_COLOR.MEDIUM }}>
-          ⚠ {s.violations} violations ({s.violationRate.toFixed(1)}% rate)
+          ⚠ {s.violations} violations ({(s.violationRate || 0).toFixed(1)}% rate)
         </div>
       )}
     </div>
@@ -295,7 +295,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>
-                      {a.actualLatencyMs}ms / {a.budgetMs}ms budget (+{a.deviationPercent.toFixed(1)}%)
+                      {a.actualLatencyMs}ms / {a.budgetMs}ms budget (+{(a.deviationPercent || 0).toFixed(1)}%)
                     </div>
                   </div>
                 ))}
