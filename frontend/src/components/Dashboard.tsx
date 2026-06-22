@@ -158,7 +158,7 @@ function ResultCard({ result }: { result: TransactionResponse }) {
         {!r.withinBudget && <span style={{ color: SEV_COLOR.HIGH }}> (+{(r.overallDeviationPercent || 0).toFixed(1)}% over)</span>}
       </div>
       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
-        {r.stages.map(s => (
+        {(r.stages || []).map(s => (
           <div key={s.stage} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
             <span style={{ color: "#94a3b8" }}>{STAGE_LABELS[s.stage]}</span>
             <span style={{ color: s.exceeded ? SEV_COLOR.MEDIUM : SEV_COLOR.OK }}>
