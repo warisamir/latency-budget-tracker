@@ -10,7 +10,7 @@ import SeverityPieChart from "../components/charts/SeverityPieChart";
 
 type SeverityFilter = "ALL" | Severity;
 
-const SEVERITY_COLORS: Record<Severity, string> = {
+const SEVERITY_COLORS: Record<Severity, "default" | "success" | "warning" | "destructive" | "secondary"> = {
   OK: "success",
   LOW: "default",
   MEDIUM: "warning",
