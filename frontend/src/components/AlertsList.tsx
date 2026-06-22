@@ -33,7 +33,9 @@ interface AlertsListProps {
 }
 
 export default function AlertsList({ alerts, onResolve }: AlertsListProps) {
-  if (alerts.length === 0) {
+  const alertsList = alerts || [];
+
+  if (alertsList.length === 0) {
     return (
       <div className="flex items-center justify-center py-8 text-center">
         <div className="text-sm text-green-400">✓ No active alerts</div>
@@ -43,7 +45,7 @@ export default function AlertsList({ alerts, onResolve }: AlertsListProps) {
 
   return (
     <div className="space-y-3">
-      {alerts.slice(0, 8).map((alert) => (
+      {alertsList.slice(0, 8).map((alert) => (
         <div
           key={alert.id}
           className="rounded-lg border-l-4 border-slate-600 bg-slate-800 p-3"

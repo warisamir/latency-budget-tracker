@@ -13,7 +13,8 @@ const SEVERITY_COLORS: Record<string, string> = {
 };
 
 export default function SeverityPieChart({ severityCounts = {} }: Props) {
-  const data = Object.entries(severityCounts)
+  const counts = severityCounts && typeof severityCounts === 'object' ? severityCounts : {};
+  const data = (Object.entries(counts) || [])
     .map(([name, value]) => ({
       name,
       value: value || 0,
