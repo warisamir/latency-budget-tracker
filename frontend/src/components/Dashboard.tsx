@@ -155,14 +155,14 @@ function ResultCard({ result }: { result: TransactionResponse }) {
       </div>
       <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 8 }}>
         Total: <strong>{r.totalLatencyMs}ms</strong> / budget {r.budgetMs}ms
-        {!r.withinBudget && <span style={{ color: SEV_COLOR.HIGH }}> (+{r.overallDeviationPercent.toFixed(1)}% over)</span>}
+        {!r.withinBudget && <span style={{ color: SEV_COLOR.HIGH }}> (+{(r.overallDeviationPercent || 0).toFixed(1)}% over)</span>}
       </div>
       <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>
         {r.stages.map(s => (
           <div key={s.stage} style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
             <span style={{ color: "#94a3b8" }}>{STAGE_LABELS[s.stage]}</span>
             <span style={{ color: s.exceeded ? SEV_COLOR.MEDIUM : SEV_COLOR.OK }}>
-              {s.actualMs}ms / {s.budgetMs}ms {s.exceeded && `(+${s.deviationPercent.toFixed(1)}%)`}
+              {s.actualMs}ms / {s.budgetMs}ms {s.exceeded && `(+${(s.deviationPercent || 0).toFixed(1)}%)`}
             </span>
           </div>
         ))}
@@ -235,7 +235,7 @@ export default function Dashboard() {
           {[
             { label: "Total Requests", value: stats.totalRequests, color: "#3b82f6" },
             { label: "Budget Violations", value: stats.budgetViolations, color: SEV_COLOR.MEDIUM },
-            { label: "Violation Rate", value: stats.violationRate.toFixed(1) + "%", color: stats.violationRate > 5 ? SEV_COLOR.HIGH : SEV_COLOR.OK },
+            { label: "Violation Rate", value: (stats.violationRate || 0).toFixed(1) + "%", color: (stats.violationRate || 0) > 5 ? SEV_COLOR.HIGH : SEV_COLOR.OK },
             { label: "Active Alerts", value: alerts.length, color: alerts.length > 0 ? SEV_COLOR.CRITICAL : SEV_COLOR.OK },
           ].map(m => (
             <div key={m.label} style={{ ...card, textAlign: "center" }}>

@@ -93,8 +93,8 @@ export default function Dashboard() {
           />
           <MetricCard
             label="Violation Rate"
-            value={`${stats.violationRate.toFixed(1)}%`}
-            color={stats.violationRate > 5 ? "text-red-400" : "text-green-400"}
+            value={`${(stats.violationRate || 0).toFixed(1)}%`}
+            color={(stats.violationRate || 0) > 5 ? "text-red-400" : "text-green-400"}
           />
           <MetricCard
             label="Active Alerts"
