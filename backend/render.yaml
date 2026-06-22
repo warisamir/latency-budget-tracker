@@ -1,9 +1,9 @@
 services:
   - type: web
     name: latency-budget-tracker
-    runtime: java
-    buildCommand: mvn clean package -DskipTests -f backend/pom.xml
-    startCommand: java -Dspring.profiles.active=prod -jar backend/target/*.jar
+    runtime: docker
+    buildCommand: docker build -t latency-tracker .
+    startCommand: java -Dspring.profiles.active=prod -jar /app/app.jar
     envVars:
       - key: JAVA_VERSION
         value: "21"
