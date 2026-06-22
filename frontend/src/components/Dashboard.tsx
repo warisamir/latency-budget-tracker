@@ -146,7 +146,7 @@ function ResultCard({ result }: { result: TransactionResponse }) {
         <SeverityBadge value={r.withinBudget ? "OK" : r.worstSeverity} />
       </div>
       <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8 }}>
-        ID: <span style={{ color: "#e2e8f0" }}>{result.transactionId.slice(0, 16)}…</span>
+        ID: <span style={{ color: "#e2e8f0" }}>{(result.transactionId || "").slice(0, 16)}…</span>
       </div>
       <div style={{ fontSize: 13, color: "#94a3b8" }}>
         {result.fromCurrency} → {result.toCurrency}: <strong style={{ color: "#e2e8f0" }}>

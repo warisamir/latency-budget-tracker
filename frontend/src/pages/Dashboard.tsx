@@ -141,7 +141,7 @@ export default function Dashboard() {
                 <div className="mt-4 border-t border-slate-700 pt-4">
                   <div className="text-xs text-slate-400">Transaction ID:</div>
                   <div className="text-sm font-mono text-slate-200">
-                    {lastTx.transactionId.slice(0, 16)}…
+                    {(lastTx.transactionId || "").slice(0, 16)}…
                   </div>
                   <div className="mt-2 text-xs text-slate-400">
                     {lastTx.fromCurrency} → {lastTx.toCurrency}:{" "}
