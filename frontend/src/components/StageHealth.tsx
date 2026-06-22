@@ -53,16 +53,16 @@ export default function StageHealth({ stage }: { stage: StageStats }) {
 
       {/* Stats */}
       <div className="mb-2 flex gap-6 text-xs text-slate-400">
-        <span>P50: <span className="font-semibold text-white">{stage.p50Ms.toFixed(1)}ms</span></span>
-        <span>P95: <span className="font-semibold text-white">{stage.p95Ms.toFixed(1)}ms</span></span>
-        <span>P99: <span className="font-semibold text-white">{stage.p99Ms.toFixed(1)}ms</span></span>
+        <span>P50: <span className="font-semibold text-white">{(stage.p50Ms || 0).toFixed(1)}ms</span></span>
+        <span>P95: <span className="font-semibold text-white">{(stage.p95Ms || 0).toFixed(1)}ms</span></span>
+        <span>P99: <span className="font-semibold text-white">{(stage.p99Ms || 0).toFixed(1)}ms</span></span>
         <span>Budget: <span className="font-semibold text-white">{stage.budgetMs}ms</span></span>
       </div>
 
       {/* Violations */}
       {stage.violations > 0 && (
         <div className="text-xs text-orange-400">
-          ⚠ {stage.violations} violations ({stage.violationRate.toFixed(1)}% rate)
+          ⚠ {stage.violations} violations ({(stage.violationRate || 0).toFixed(1)}% rate)
         </div>
       )}
     </div>

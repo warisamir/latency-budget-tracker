@@ -8,7 +8,7 @@ interface Props {
 export default function ViolationRateChart({ stageStats }: Props) {
   const data = stageStats.map((s) => ({
     stage: s.stage.replace(/_/g, " ").slice(0, 12),
-    rate: parseFloat(s.violationRate.toFixed(2)),
+    rate: s.violationRate ? parseFloat(s.violationRate.toFixed(2)) : 0,
   }));
 
   return (
@@ -19,7 +19,7 @@ export default function ViolationRateChart({ stageStats }: Props) {
         <YAxis dataKey="stage" type="category" stroke="#94a3b8" width={110} style={{ fontSize: "12px" }} />
         <Tooltip
           contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569" }}
-          formatter={(value: any) => `${value.toFixed(2)}%`}
+          formatter={(value: any) => typeof value === 'number' ? `${value.toFixed(2)}%` : value}
         />
         <Bar dataKey="rate" fill="#f97316" radius={[0, 8, 8, 0]} />
       </BarChart>

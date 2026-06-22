@@ -8,9 +8,9 @@ interface Props {
 export default function LatencyTrendChart({ dataPoints }: Props) {
   const data = dataPoints.map((d) => ({
     time: new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    requests: d.totalRequests,
-    violationRate: parseFloat(d.violationRate.toFixed(2)),
-    avgLatency: parseFloat(d.avgLatencyMs.toFixed(2)),
+    requests: d.totalRequests || 0,
+    violationRate: d.violationRate ? parseFloat(d.violationRate.toFixed(2)) : 0,
+    avgLatency: d.avgLatencyMs ? parseFloat(d.avgLatencyMs.toFixed(2)) : 0,
   }));
 
   return (

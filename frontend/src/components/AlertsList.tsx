@@ -65,7 +65,7 @@ export default function AlertsList({ alerts, onResolve }: AlertsListProps) {
             </div>
           </div>
           <div className="text-xs text-slate-400">
-            {alert.actualLatencyMs}ms / {alert.budgetMs}ms budget (+{alert.deviationPercent.toFixed(1)}%)
+            {alert.actualLatencyMs}ms / {alert.budgetMs}ms budget (+{(alert.deviationPercent || 0).toFixed(1)}%)
           </div>
         </div>
       ))}

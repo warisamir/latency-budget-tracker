@@ -24,7 +24,7 @@ export default function StageLatencyBarChart({ stageStats }: Props) {
         <YAxis stroke="#94a3b8" label={{ value: "Latency (ms)", angle: -90, position: "insideLeft" }} />
         <Tooltip
           contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569" }}
-          formatter={(value: any) => value.toFixed(2)}
+          formatter={(value: any) => typeof value === 'number' ? value.toFixed(2) : value}
         />
         <Legend />
         <Bar dataKey="P50" fill={COLORS.p50} />

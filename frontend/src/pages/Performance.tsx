@@ -55,8 +55,8 @@ export default function Performance() {
         <div className="mb-8 grid grid-cols-4 gap-4">
           <MetricCard label="Total Requests" value={stats.totalRequests} color="text-blue-400" />
           <MetricCard label="Budget Violations" value={stats.budgetViolations} color="text-orange-400" />
-          <MetricCard label="Violation Rate" value={`${stats.violationRate.toFixed(1)}%`} color={stats.violationRate > 5 ? "text-red-400" : "text-green-400"} />
-          <MetricCard label="Avg Latency" value={`${(stats.stageStats.reduce((a, s) => a + s.avgMs, 0) / stats.stageStats.length).toFixed(0)}ms`} color="text-purple-400" />
+          <MetricCard label="Violation Rate" value={`${(stats.violationRate || 0).toFixed(1)}%`} color={(stats.violationRate || 0) > 5 ? "text-red-400" : "text-green-400"} />
+          <MetricCard label="Avg Latency" value={`${(stats.stageStats && stats.stageStats.length > 0 ? (stats.stageStats.reduce((a, s) => a + s.avgMs, 0) / stats.stageStats.length) : 0).toFixed(0)}ms`} color="text-purple-400" />
         </div>
       )}
 

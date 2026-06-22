@@ -177,7 +177,7 @@ export default function Alerts() {
                       <td className="px-4 py-3 text-right text-slate-300">
                         {alert.actualLatencyMs}ms / {alert.budgetMs}ms
                       </td>
-                      <td className="px-4 py-3 text-right text-orange-400">{alert.deviationPercent.toFixed(1)}%</td>
+                      <td className="px-4 py-3 text-right text-orange-400">{(alert.deviationPercent || 0).toFixed(1)}%</td>
                       <td className="max-w-xs px-4 py-3 text-slate-400 truncate">{alert.message}</td>
                       <td className="px-4 py-3 text-slate-500 text-xs">
                         {new Date(alert.createdAt).toLocaleTimeString()}
