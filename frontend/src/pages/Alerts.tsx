@@ -9,13 +9,18 @@ import ViolationRateChart from "../components/charts/ViolationRateChart";
 import SeverityPieChart from "../components/charts/SeverityPieChart";
 
 type SeverityFilter = "ALL" | Severity;
+type BadgeVariant = "default" | "success" | "warning" | "destructive" | "secondary";
 
-const SEVERITY_COLORS: Record<Severity, "default" | "success" | "warning" | "destructive" | "secondary"> = {
+const SEVERITY_COLORS = {
   OK: "success",
   LOW: "default",
   MEDIUM: "warning",
   HIGH: "warning",
   CRITICAL: "destructive",
+} as const satisfies Record<Severity, BadgeVariant>;
+
+const getSeverityVariant = (severity: Severity): BadgeVariant => {
+  return SEVERITY_COLORS[severity] as BadgeVariant;
 };
 
 export default function Alerts() {
@@ -167,7 +172,7 @@ export default function Alerts() {
                     <tr key={alert.id} className="border-b border-slate-800 hover:bg-slate-900">
                       <td className="px-4 py-3 font-mono text-slate-200">{alert.stage.replace(/_/g, " ")}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={SEVERITY_COLORS[alert.severity]}>{alert.severity}</Badge>
+                        <Badge variant={getSeverityVariant(alert.severity)}>{alert.severity}</Badge>
                       </td>
                       <td className="px-4 py-3 text-right text-slate-300">
                         {alert.actualLatencyMs}ms / {alert.budgetMs}ms
