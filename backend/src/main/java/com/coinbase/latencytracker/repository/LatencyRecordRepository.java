@@ -70,4 +70,16 @@ public interface LatencyRecordRepository extends JpaRepository<LatencyRecord, Lo
 
     @Query("SELECT r.stage, AVG(r.actualLatencyMs) FROM LatencyRecord r WHERE r.createdAt >= :since GROUP BY r.stage")
     List<Object[]> findAvgLatencyByStageAfter(@Param("since") Instant since);
+
+    @Query(value = """
+            SELECT DATE_TRUNC(:bucket, created_at) as bucket_time,
+                   COUNT(*) as total_requests,
+                   SUM(CASE WHEN budget_exceeded = true THEN 1 ELSE 0 END) as violations,
+                   AVG(actual_latency_ms) as avg_latency
+            FROM latency_records
+            WHERE created_at >= :since
+            GROUP BY DATE_TRUNC(:bucket, created_at)
+            ORDER BY bucket_time ASC
+            """, nativeQuery = true)
+    List<Object[]> findHistoryByWindow(@Param("since") Instant since, @Param("bucket") String bucket);
 }

@@ -2,6 +2,8 @@ package com.coinbase.latencytracker.service;
 
 import com.coinbase.latencytracker.dto.LatencyStatsDto;
 import com.coinbase.latencytracker.dto.LatencyStatsDto.StageStats;
+import com.coinbase.latencytracker.dto.LatencyHistoryDto;
+import com.coinbase.latencytracker.dto.LatencyHistoryDto.DataPoint;
 import com.coinbase.latencytracker.entity.LatencyRecord.Stage;
 import com.coinbase.latencytracker.config.LatencyBudgetProperties;
 import com.coinbase.latencytracker.repository.LatencyRecordRepository;
@@ -80,6 +82,58 @@ public class LatencyStatsService {
             case "7d"  -> Instant.now().minus(7,  ChronoUnit.DAYS);
             default    -> Instant.now().minus(1,  ChronoUnit.HOURS);
         };
+    }
+
+    public LatencyHistoryDto getHistory(String window, int buckets) {
+        Instant since = windowToInstant(window);
+        long bucketDurationMs = calculateBucketDuration(window, buckets);
+        String bucketUnit = calculateBucketUnit(bucketDurationMs);
+
+        List<Object[]> results = recordRepository.findHistoryByWindow(since, bucketUnit);
+        List<DataPoint> dataPoints = new ArrayList<>();
+
+        long totalRequests = 0;
+        long totalViolations = 0;
+
+        for (Object[] row : results) {
+            Instant timestamp = (Instant) row[0];
+            long reqCount = ((Number) row[1]).longValue();
+            long violationCount = ((Number) row[2]).longValue();
+            double avgLatency = ((Number) row[3]).doubleValue();
+
+            totalRequests += reqCount;
+            totalViolations += violationCount;
+
+            dataPoints.add(DataPoint.builder()
+                    .timestamp(timestamp)
+                    .totalRequests(reqCount)
+                    .violations(violationCount)
+                    .violationRate(reqCount > 0 ? (double) violationCount / reqCount * 100 : 0)
+                    .avgLatencyMs(round(avgLatency))
+                    .build());
+        }
+
+        return LatencyHistoryDto.builder()
+                .window(window)
+                .buckets(buckets)
+                .bucketDurationMs(bucketDurationMs)
+                .dataPoints(dataPoints)
+                .build();
+    }
+
+    private long calculateBucketDuration(String window, int buckets) {
+        return switch (window.toLowerCase()) {
+            case "1h"  -> 3600_000L / buckets;
+            case "24h" -> 86400_000L / buckets;
+            case "7d"  -> 604800_000L / buckets;
+            default    -> 3600_000L / buckets;
+        };
+    }
+
+    private String calculateBucketUnit(long bucketMs) {
+        if (bucketMs < 60_000) return "minute";
+        if (bucketMs < 3600_000) return "minute";
+        return "hour";
     }
 
     private double round(double v) {

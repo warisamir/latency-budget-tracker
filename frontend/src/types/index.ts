@@ -76,3 +76,35 @@ export interface AlertDto {
   notificationSent: boolean;
   createdAt: string;
 }
+
+export interface DataPoint {
+  timestamp: string;
+  totalRequests: number;
+  violations: number;
+  violationRate: number;
+  avgLatencyMs: number;
+}
+
+export interface LatencyHistoryDto {
+  window: string;
+  buckets: number;
+  bucketDurationMs: number;
+  dataPoints: DataPoint[];
+}
+
+export interface AlertsResponse {
+  content: AlertDto[];
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface HealthResponse {
+  status: string;
+  timestamp: string;
+  traceId: string;
+  components: {
+    db: { status: string };
+    redis: { status: string };
+  };
+}

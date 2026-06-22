@@ -2,6 +2,10 @@ spring:
   application:
     name: latency-budget-tracker
 
+# CORS Configuration - Allow cross-origin requests from frontend
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/latencydb}
     username: ${DB_USER:postgres}
