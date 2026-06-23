@@ -58,10 +58,12 @@ export default function Alerts() {
     await refetchAlerts();
   };
 
-  const severityCounts = stats?.stageStats.reduce((acc, s) => {
-    acc[s.healthy ? "OK" : "HIGH"] = (acc[s.healthy ? "OK" : "HIGH"] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) || {};
+  const severityCounts = (stats?.stageStats && Array.isArray(stats.stageStats))
+    ? stats.stageStats.reduce((acc, s) => {
+        acc[s.healthy ? "OK" : "HIGH"] = (acc[s.healthy ? "OK" : "HIGH"] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    : {};
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">

@@ -13,13 +13,15 @@ const SEVERITY_COLORS: Record<string, string> = {
 };
 
 export default function SeverityPieChart({ severityCounts = {} }: Props) {
-  const counts = severityCounts && typeof severityCounts === 'object' ? severityCounts : {};
-  const data = (Object.entries(counts) || [])
-    .map(([name, value]) => ({
-      name,
-      value: value || 0,
-    }))
-    .filter((d) => d.value > 0);
+  const counts = (severityCounts && typeof severityCounts === 'object' && !Array.isArray(severityCounts)) ? severityCounts : {};
+  const data = Array.isArray(Object.entries(counts))
+    ? Object.entries(counts)
+        .map(([name, value]) => ({
+          name,
+          value: typeof value === 'number' ? value : 0,
+        }))
+        .filter((d) => d.value > 0)
+    : [];
 
   if (data.length === 0) {
     return (
