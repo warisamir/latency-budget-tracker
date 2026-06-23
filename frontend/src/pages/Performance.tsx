@@ -62,7 +62,7 @@ export default function Performance() {
 
       <div className="space-y-6">
         {/* Stage Latency Comparison */}
-        {stats?.stageStats && (
+        {stats?.stageStats && stats.stageStats.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>P50/P95/P99 vs Budget by Stage</CardTitle>
@@ -75,7 +75,7 @@ export default function Performance() {
 
         {/* Trends + Severity */}
         <div className="grid grid-cols-2 gap-6">
-          {history?.dataPoints && (
+          {history?.dataPoints && history.dataPoints.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Latency Trend Over Time</CardTitle>
@@ -86,13 +86,13 @@ export default function Performance() {
             </Card>
           )}
 
-          {stats?.stageStats && (
+          {stats?.stageStats && stats.stageStats.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Severity Distribution</CardTitle>
               </CardHeader>
               <CardContent>
-                <SeverityPieChart severityCounts={stats.stageStats.length > 0 ? {} : {}} />
+                <SeverityPieChart severityCounts={{}} />
               </CardContent>
             </Card>
           )}

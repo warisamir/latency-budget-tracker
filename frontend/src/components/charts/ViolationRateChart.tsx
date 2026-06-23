@@ -6,10 +6,18 @@ interface Props {
 }
 
 export default function ViolationRateChart({ stageStats }: Props) {
-  const data = stageStats.map((s) => ({
+  const data = (stageStats || []).map((s) => ({
     stage: s.stage.replace(/_/g, " ").slice(0, 12),
     rate: s.violationRate ? parseFloat(s.violationRate.toFixed(2)) : 0,
   }));
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex h-48 items-center justify-center text-slate-400">
+        No violation data available
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={250}>

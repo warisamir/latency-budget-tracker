@@ -6,12 +6,20 @@ interface Props {
 }
 
 export default function StageRadarChart({ stageStats }: Props) {
-  const data = stageStats.map((s) => ({
+  const data = (stageStats || []).map((s) => ({
     stage: s.stage.replace(/_/g, " ").slice(0, 10),
     p95: s.p95Ms,
     budget: s.budgetMs,
     health: s.healthy ? 100 : 50,
   }));
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center text-slate-400">
+        No health data available
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={300}>

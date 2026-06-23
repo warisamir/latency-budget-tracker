@@ -8,13 +8,21 @@ interface Props {
 const COLORS = { p50: "#3b82f6", p95: "#f97316", p99: "#ef4444", budget: "#10b981" };
 
 export default function StageLatencyBarChart({ stageStats }: Props) {
-  const data = stageStats.map((s) => ({
+  const data = (stageStats || []).map((s) => ({
     stage: s.stage.replace(/_/g, " "),
     P50: s.p50Ms,
     P95: s.p95Ms,
     P99: s.p99Ms,
     Budget: s.budgetMs,
   }));
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center text-slate-400">
+        No stage data available
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={300}>

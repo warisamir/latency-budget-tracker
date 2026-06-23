@@ -6,12 +6,20 @@ interface Props {
 }
 
 export default function LatencyTrendChart({ dataPoints }: Props) {
-  const data = dataPoints.map((d) => ({
+  const data = (dataPoints || []).map((d) => ({
     time: new Date(d.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     requests: d.totalRequests || 0,
     violationRate: d.violationRate ? parseFloat(d.violationRate.toFixed(2)) : 0,
     avgLatency: d.avgLatencyMs ? parseFloat(d.avgLatencyMs.toFixed(2)) : 0,
   }));
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center text-slate-400">
+        No trend data available
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={300}>

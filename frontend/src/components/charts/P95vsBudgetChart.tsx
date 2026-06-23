@@ -6,11 +6,19 @@ interface Props {
 }
 
 export default function P95vsBudgetChart({ stageStats }: Props) {
-  const data = stageStats.map((s) => ({
+  const data = (stageStats || []).map((s) => ({
     stage: s.stage.replace(/_/g, " "),
     "P95 Latency": s.p95Ms,
     "Remaining Budget": Math.max(0, s.budgetMs - s.p95Ms),
   }));
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex h-80 items-center justify-center text-slate-400">
+        No budget comparison data available
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={320}>

@@ -6,11 +6,19 @@ interface Props {
 }
 
 export default function BudgetComplianceChart({ stageStats }: Props) {
-  const data = stageStats.map((s) => ({
+  const data = (stageStats || []).map((s) => ({
     stage: s.stage.replace(/_/g, " ").slice(0, 12),
     compliance: s.p95Ms <= s.budgetMs ? 100 : Math.round((s.budgetMs / s.p95Ms) * 100),
     healthy: s.healthy,
   }));
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center text-slate-400">
+        No compliance data available
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={300}>
