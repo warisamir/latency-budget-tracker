@@ -57,11 +57,16 @@ public class LatencyMetrics {
     }
 
     public void recordStageLatency(Stage stage, long latencyMs, boolean exceeded, Severity severity) {
-        // Timer
+        // Timer with Prometheus histogram percentiles (P50, P95, P99)
+        // These are exported to Prometheus and queryable via histogram_quantile()
         Timer.builder(METRIC_STAGE_DURATION)
-             .description("Latency per pipeline stage")
+             .description("Latency per pipeline stage (with P50/P95/P99 percentiles)")
              .tag("stage", stage.name())
              .tag("exceeded", String.valueOf(exceeded))
+             .publishPercentiles(0.5, 0.95, 0.99)  // ← Prometheus histograms
+             .publishPercentileHistogram()         // ← SLA boundaries
+             .minimumExpectedValue(1, TimeUnit.MILLISECONDS)
+             .maximumExpectedValue(1000, TimeUnit.MILLISECONDS)
              .register(registry)
              .record(latencyMs, TimeUnit.MILLISECONDS);
 

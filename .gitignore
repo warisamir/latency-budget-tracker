@@ -42,3 +42,6 @@ infra/data/
 *.pem
 *.key
 secrets/
+.env
+.env.local
+.env.*.local

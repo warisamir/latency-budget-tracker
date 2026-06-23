@@ -47,11 +47,12 @@ public class TransactionService {
 
     private static final String EXCHANGE_RATE_KEY_PREFIX = "exchange:rate:";
 
-    private final TracingService         tracingService;
-    private final LatencyBudgetEngine    budgetEngine;
-    private final AlertEventPublisher    alertPublisher;
-    private final LatencyMetrics         latencyMetrics;
-    private final LatencyRecordRepository recordRepository;
+    private final TracingService              tracingService;
+    private final LatencyBudgetEngine         budgetEngine;
+    private final AlertEventPublisher         alertPublisher;
+    private final LatencyMetrics              latencyMetrics;
+    private final LatencyRecordRepository     recordRepository;
+    private final LatencyRecordBatchWriter    batchWriter;
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
@@ -128,18 +129,26 @@ public class TransactionService {
             evaluateAndRecord(Stage.RESPONSE_SERIALIZATION, respResult, transactionId, traceId,
                     records, latencies, budgets);
 
-            // Persist all latency records in batch
-            recordRepository.saveAll(records);
+            // Enqueue latency records for async batched write (non-blocking)
+            for (LatencyRecord record : records) {
+                batchWriter.enqueueRecord(record);
+            }
 
             return respResult.value();
 
         } catch (LatencyTrackerException ex) {
             latencyMetrics.incrementErrors();
-            recordRepository.saveAll(records); // persist what we have
+            // Still enqueue records even on error (non-blocking)
+            for (LatencyRecord record : records) {
+                batchWriter.enqueueRecord(record);
+            }
             throw ex;
         } catch (Exception ex) {
             latencyMetrics.incrementErrors();
-            recordRepository.saveAll(records);
+            // Enqueue whatever records we have
+            for (LatencyRecord record : records) {
+                batchWriter.enqueueRecord(record);
+            }
             log.error("Unexpected error processing transaction {}: {}", transactionId, ex.getMessage(), ex);
             throw new LatencyTrackerException("Transaction processing failed", HttpStatus.INTERNAL_SERVER_ERROR.value(), ex);
         }

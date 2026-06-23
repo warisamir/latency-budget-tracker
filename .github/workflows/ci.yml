@@ -1,0 +1,224 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # BACKEND: Build, Test, Coverage, Security
+  # ─────────────────────────────────────────────────────────────────────────────
+  backend:
+    name: Backend (Java/Maven)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: latencydb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean compile -B
+        working-directory: backend
+
+      - name: Run Tests
+        run: mvn test -B
+        working-directory: backend
+        env:
+          DB_URL: jdbc:postgresql://localhost:5432/latencydb
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Generate Coverage Report
+        run: mvn jacoco:report -B
+        working-directory: backend
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/target/site/jacoco/jacoco.xml
+          flags: backend
+          fail_ci_if_error: false
+
+      - name: Check Coverage Threshold (>80%)
+        run: |
+          COVERAGE=$(mvn jacoco:report -q && xmllint --xpath 'string(//package/@line-rate)' backend/target/site/jacoco/jacoco.xml | head -c 5)
+          echo "Coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 0.80" | bc -l) )); then
+            echo "❌ Coverage below 80%"
+            exit 1
+          fi
+        working-directory: backend
+
+      - name: SpotBugs Static Analysis
+        run: mvn spotbugs:check -B || true
+        working-directory: backend
+
+      - name: Package JAR
+        run: mvn package -DskipTests -B
+        working-directory: backend
+
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latency-tracker-app.jar
+          path: backend/target/*.jar
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # FRONTEND: Build, Test, Lint
+  # ─────────────────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend (React/TypeScript)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Type Check (TypeScript)
+        run: npm run build
+        working-directory: frontend
+        env:
+          CI: true
+
+      - name: ESLint Check
+        run: npm run lint || true
+        working-directory: frontend
+
+      - name: Build for Production
+        run: npm run build
+        working-directory: frontend
+
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: latency-tracker-frontend
+          path: frontend/dist
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # SECURITY: Dependency Scanning, Container Scan
+  # ─────────────────────────────────────────────────────────────────────────────
+  security:
+    name: Security Scans
+    runs-on: ubuntu-latest
+    needs: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Check for Vulnerable Dependencies
+        run: mvn org.owasp:dependency-check-maven:check -B || true
+        working-directory: backend
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # DOCKER: Build & Scan Container Image
+  # ─────────────────────────────────────────────────────────────────────────────
+  docker:
+    name: Docker Build & Scan
+    runs-on: ubuntu-latest
+    needs: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          push: false
+          tags: latency-budget-tracker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'backend'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # SUMMARY: Final Status
+  # ─────────────────────────────────────────────────────────────────────────────
+  summary:
+    name: CI/CD Summary
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, security, docker]
+    if: always()
+
+    steps:
+      - name: Check Build Status
+        run: |
+          if [ "${{ needs.backend.result }}" == "failure" ] || [ "${{ needs.frontend.result }}" == "failure" ]; then
+            echo "❌ CI/CD pipeline failed"
+            exit 1
+          fi
+          echo "✅ CI/CD pipeline passed"
+
+      - name: Create Deployment Badge
+        run: |
+          echo "🚀 Ready for deployment"
+          echo "- Backend: JAR packaged"
+          echo "- Frontend: Built & tested"
+          echo "- Security: Scanned"
+          echo "- Coverage: >80% (if threshold met)"

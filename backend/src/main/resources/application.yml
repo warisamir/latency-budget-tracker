@@ -45,8 +45,8 @@ spring:
 
   security:
     user:
-      name: admin
-      password: admin123
+      name: ${SECURITY_USER:admin}
+      password: ${SECURITY_PASSWORD:changeme}
 
 # Actuator
 management:
@@ -124,6 +124,12 @@ resilience4j:
         minimumNumberOfCalls: 5
         failureRateThreshold: 60
         waitDurationInOpenState: 10s
+
+# ─── Batch Writer Configuration ────────────────────────────────────────────────
+latency:
+  batch-writer:
+    batch-size: 100           # Flush when queue reaches 100 records
+    flush-interval-ms: 1000   # Or every 1 second, whichever comes first
 
 logging:
   level:
