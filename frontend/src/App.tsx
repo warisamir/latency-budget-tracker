@@ -7,22 +7,25 @@ import Performance from "./pages/Performance";
 import Alerts from "./pages/Alerts";
 import Monitoring from "./pages/Monitoring";
 import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/ErrorBoundary";
 import "./index.css";
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<RootLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/performance" element={<Performance />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/monitoring" element={<Monitoring />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<RootLayout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/performance" element={<Performance />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/monitoring" element={<Monitoring />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
