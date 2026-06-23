@@ -250,7 +250,7 @@ export default function Dashboard() {
         {/* Stage cards */}
         <div style={card}>
           <h3 style={{ margin: "0 0 16px", color: "#e2e8f0", fontSize: 15 }}>Stage Health — P95 vs Budget</h3>
-          {stats ? (
+          {stats && stats.stageStats && stats.stageStats.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {stats.stageStats.map(s => <StageCard key={s.stage} s={s} />)}
             </div>
@@ -278,11 +278,11 @@ export default function Dashboard() {
                 </span>
               )}
             </h3>
-            {alerts.length === 0 ? (
+            {!alerts || alerts.length === 0 ? (
               <div style={{ color: SEV_COLOR.OK, fontSize: 13, textAlign: "center", padding: 20 }}>✓ No active alerts</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {alerts.slice(0, 8).map(a => (
+                {(alerts || []).slice(0, 8).map(a => (
                   <div key={a.id} style={{ background: "#1e293b", borderRadius: 8, padding: "10px 12px", borderLeft: `3px solid ${SEV_COLOR[a.severity]}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 12, color: "#94a3b8" }}>{STAGE_LABELS[a.stage]}</span>
